@@ -1,8 +1,9 @@
 {
-  "name": "mapkiller",
-  "version": "1.0.0",
+  "name": "node-example",
+  "version": "0.0.1",
   "dependencies": {
-    "express": "2.0.0",
+    "express": "2.2.0",
+	"websocket-server": "1.4.03",
     "underscore": ""
   }
 }
