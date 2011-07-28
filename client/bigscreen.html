@@ -1,0 +1,70 @@
+<html>
+<meta name="viewport" content="width=device-width"/>
+<link rel="stylesheet" href="mapkiller.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script src="lib/json2.js"></script>
+<script src="lib/utility.js"></script>
+<script src="lib/map.overlay.js"></script>
+<script type="text/javascript" src="lib/jquery.js"></script>
+<script type="text/javascript" src="lib/underscore.js"></script>
+<script type="text/javascript" src="lib/backbone.js"></script>
+
+<script type="text/javascript" src="lib/service.js"></script>
+
+<script type="text/javascript" src="user.js"></script>
+<script src="bigscreen.js"></script>
+
+<body onload="onBodyLoad()">
+<div id="container"  style="width:100%;height:100%;position:relative;overflow:hidden;">
+	<div style="width:100%;height:100%;" id="mapContainer"></div>
+</div>
+
+<div id="top-banner" class="banner">
+	<img src="images/bigscreen-top.png" />
+</div>
+<div id="bottom-banner" class="banner">
+	<img src="images/bigscreen-bottom.png" />
+	<div class="h-container" style="top:0px;margin:5px;">
+		<div id="status" style="margin:auto;line-heigth:30px;"></div>
+	</div>
+</div>
+<div id="left-banner" class="banner">
+	<img src="images/bigscreen-left.png" />
+</div>
+<div id="control" style="color:yellow;position:absolute;width:180px;height:180px; bottom:30px;right:0px;">
+	<div id="control-image" style="width:180px;height:180px;position:absolute;top:0px;left:0px;overflow:hidden;">
+		<img src="images/mapcontrol.png" style="height:1500px;margin-top:10px;">
+	</div>
+	<div id="control" style="position: absolute; left: 0px; top: 0px; width: 80px; height: 120px;" id="compass" title="">
+		<div style="position: absolute; left: 60px; top: 0px;" title="up"     class="pan_up direction"></div>
+		<div style="position: absolute; left: 0px; top: 60px;" title="left"     class="pan_lt direction"></div>
+		<div style="position: absolute; left: 120px; top: 60px;" title="right" 	class="pan_rt direction"></div>
+		<div style="position: absolute; left: 60px; top: 120px;" title="down" 	class="pan_down direction"></div>
+		<div style="position: absolute; left: 60px; top: 60px;" title="return" 	class="center_result direction"></div>
+	</div>
+</div>
+<div id="get-layer" class="h-container btn-container">
+	<div id="get-btn" class="bottom-btn"></div>
+</div>
+
+<div id="lost-layer" class="fullscreen-layer message-layer">
+	<img src="images/lost-background.png">
+	<div class="h-container btn-container">
+		<div id="lost-goon-btn" class="goon-btn bottom-btn"></div>
+	</div>
+</div>
+<div id="got-layer" class="fullscreen-layer message-layer">
+	<img src="images/got-background.png">
+	<div class="h-container  btn-container">
+		<div id="got-goon-btn" class="goon-btn bottom-btn"></div>
+	</div>
+</div>
+<div id="start-layer" class="fullscreen-layer">
+	<img src="images/start.png">
+</div>
+<div id="win-layer"  class="fullscreen-layer" style="display:none;">
+	<img src="images/win.png">
+</div>
+</body>
+</html>

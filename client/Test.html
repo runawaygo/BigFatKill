@@ -1,0 +1,25 @@
+<html>
+	<head>
+		<script src="lib/jquery.js"></script>
+		<script>
+			$(function(){
+				setInterval(function(){
+					$.getJSON('http://127.0.0.1:8080/in',
+					function(e) {
+						var container = document.getElementById('container');
+						container.innerHTML += e.a + "<br/>";
+					});
+				},500);
+				
+
+				
+			});
+		</script>
+	</head>
+
+	<body> 
+		<div id="container">
+			superwolf
+ 		</div>
+	</body>
+</html>
