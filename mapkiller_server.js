@@ -158,29 +158,38 @@ app.get('/big',function(req,res){
 
 
 setInterval(function(){
-	var now = new Date();
-	for(var u in userData)
+	
+	try
 	{
-		if(u == 'vaio') continue;
-		if(userData[u] == null) continue;
-		if(userData[u].name == 'robot') continue;
-		
-		var user = userData[u];
-		console.log(u);
-		console.log(user);
-		
-		
-		if(user.tick.dateDiff('s',now) > 5)
+		var now = new Date();
+		for(var u in userData)
 		{
-			if(user.isVaio) 
+			if(u == 'vaio') continue;
+			if(userData[u] == null) continue;
+			if(userData[u].name == 'robot') continue;
+		
+			var user = userData[u];
+			console.log(u);
+			console.log(user);
+		
+		
+			if(user.tick.dateDiff('s',now) > 5)
 			{
-				userData.vaio = {};
-				userData.vaio.longitude = user.longitude;
-				userData.vaio.latitude = user.latitude;
+				if(user.isVaio) 
+				{
+					userData.vaio = {};
+					userData.vaio.longitude = user.longitude;
+					userData.vaio.latitude = user.latitude;
+				}
+				userData[u] = null;
 			}
-			userData[u] = null;
 		}
 	}
+	catch(exp)
+	{
+		console.log(exp)
+	}
+	
 },5000);
 
 app.post('/location',function(req,res){	
@@ -272,5 +281,5 @@ app.post('/resetrobots',function(req,res){
 	resetRobots();
 });
 
-
-app.listen(8080);
+var port = process.env.PORT || 8080;
+app.listen(port);
