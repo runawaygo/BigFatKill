@@ -109,6 +109,8 @@ function getService() {
         { name: "get", url: "/get", method: "post" },
 		{ name: "enemies", url: "/enemies", method: "get" },
 		{ name: "resetrobots", url: "/resetrobots", method: "post" },
+		{ name: "postmessage", url: "/postmessage", method: "post" },
+		{ name: "messages", url: "/messages", method: "get" },
     ];
 
 	 function GenerateSyncMethod(serviceItem) {

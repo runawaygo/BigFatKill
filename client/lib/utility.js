@@ -4,3 +4,8 @@ function getRandom(max){
     vNum = Math.round(vNum * max);
     return vNum;
 }
+
+function wrapForBackgroundImage(imageUrl)
+{
+	return 'url('+imageUrl+')';
+}

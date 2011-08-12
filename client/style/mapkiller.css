@@ -27,23 +27,23 @@ img {
 }
 #get-btn
 {
-	background-image:url(images/catch.png);
+	background-image:url(/client/images/catch.png);
 
 }
 
 #get-btn:hover
 {
 	
-	background-image:url(images/catch-mousedown.png);
+	background-image:url(/client/images/catch-mousedown.png);
 }
 
 #start-get-btn
 {
-	background-image:url(images/catch.png);
+	background-image:url(/client/images/catch.png);
 }
 #start-get-btn:hover
 {
-	background-image:url(images/catch-mousedown.png);
+	background-image:url(/client/images/catch-mousedown.png);
 }
 
 .btn-container
@@ -66,20 +66,20 @@ img {
 
 #got-goon-btn
 {
-	background-image:url(images/goon-got.png);
+	background-image:url(/client/images/goon-got.png);
 }
 #got-goon-btn:hover
 {
-	background-image:url(images/goon-got-mousedown.png);	
+	background-image:url(/client/images/goon-got-mousedown.png);	
 }
 
 #lost-goon-btn
 {
-	background-image:url(images/goon-lost.png);
+	background-image:url(/client/images/goon-lost.png);
 }
 #lost-goon-btn:hover
 {
-	background-image:url(images/goon-lost-mousedown.png);
+	background-image:url(/client/images/goon-lost-mousedown.png);
 }
 
 .h-container

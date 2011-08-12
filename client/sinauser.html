@@ -1,0 +1,42 @@
+<html>
+<head>
+	<script src="/client/lib/json2.js"></script>
+	<script src="/client/lib/utility.js"></script>
+	<script src="/client/lib/jquery.js"></script>
+	<script src="/client/lib/underscore.js"></script>
+	<script src="/client/lib/backbone.js"></script>
+	<script src="/client/lib/service.js"></script>
+	<script src="/client/logic/user.module.js"></script>
+	<script src="/client/logic/sinaTestData.userinfo.js"></script>
+	<script>
+		window.onload=function()
+		{
+			$('#btn').click(function(){
+				alert('shit');
+				
+				populateData(sinaTestData.userinfo);
+//				$.get('/sina',function(data){});
+			});	
+		}
+		
+		function populateData(data){
+			alert('comeon');
+			user.set(data);
+			$('body').append(userview.render().el);
+			console.log(data);
+		}
+	</script>
+
+</head>
+<body>
+	<script type="text/template" id="sinauser-template">
+		<div class="super" style="width:50px;height:50px;background-color:green;">
+			<div>
+				<%=name%>
+			</div>
+		</div>
+	</script>
+	<div id="btn" style="cursor:pointer;">superwolf</div>
+	<a href="/user">oauth</a>
+</body>
+</html>

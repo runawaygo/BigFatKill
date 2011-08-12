@@ -1,41 +1,17 @@
+require('./lib/utility.js');
+//need express and ejs
+var express = require('express'),
+	sinaOAuth = require('./lib/sinaOAuth'),
+	app = express.createServer();
 
-Date.prototype.dateAdd = function(interval, number)
- {
-    var d = this;
-    var k = {
-        'y': 'FullYear',
-        'q': 'Month',
-        'm': 'Month',
-        'w': 'Date',
-        'd': 'Date',
-        'h': 'Hours',
-        'n': 'Minutes',
-        's': 'Seconds',
-        'ms': 'MilliSeconds'
-    };
-    var n = {
-        'q': 3,
-        'w': 7
-    };
-    eval('d.set' + k[interval] + '(d.get' + k[interval] + '()+' + ((n[interval] || 1) * number) + ')');
-    return d;
-}
-Date.prototype.dateDiff = function(interval, objDate2)
- {
-    var d = this,
-    i = {},
-    t = d.getTime(),
-    t2 = objDate2.getTime();
-    i['y'] = objDate2.getFullYear() - d.getFullYear();
-    i['q'] = i['y'] * 4 + Math.floor(objDate2.getMonth() / 4) - Math.floor(d.getMonth() / 4);
-    i['m'] = i['y'] * 12 + objDate2.getMonth() - d.getMonth();
-    i['ms'] = objDate2.getTime() - d.getTime();
-    i['w'] = Math.floor((t2 + 345600000) / (604800000)) - Math.floor((t + 345600000) / (604800000));
-    i['d'] = Math.floor(t2 / 86400000) - Math.floor(t / 86400000);
-    i['h'] = Math.floor(t2 / 3600000) - Math.floor(t / 3600000);
-    i['n'] = Math.floor(t2 / 60000) - Math.floor(t / 60000);
-    i['s'] = Math.floor(t2 / 1000) - Math.floor(t / 1000);
-    return i[interval];
+var userData = {};
+var messageArray = [];
+
+function addMessage(message)
+{
+	if(messageArray.length >20) messageArray.splice(0,1);
+	messageArray[messageArray.length] = message;
+	
 }
 
 function getRandom(max){
@@ -45,24 +21,29 @@ function getRandom(max){
     return vNum;
 }
 
-function createRobot()
-{
-	var userinfo = {};
-	userinfo.id = getRandom(10000);
-	userinfo.name = 'robot';
-	userinfo.longitude = userData.vaio.longitude + (getRandom(100)-50) * 0.0001;
-	userinfo.latitude = userData.vaio.latitude + (getRandom(100)-50) * 0.0001;
-	userinfo.isVaio = false;
-	return userinfo;
-}
-
 function createRobots()
 {
+	function createRobot()
+	{
+		var userinfo = {};
+		userinfo.id = getRandom(10000);
+		userinfo.name = 'robot';
+		userinfo.longitude = userData.vaio.longitude + (getRandom(100)-50) * 0.0001;
+		userinfo.latitude = userData.vaio.latitude + (getRandom(100)-50) * 0.0001;
+		userinfo.isVaio = false;
+		return userinfo;
+	}
 	for(var i=0;i<10;i++)
 	{
 		var robot = createRobot();
 		userData[robot.id] = robot;
 	}
+}
+
+function resetRobot(robot)
+{
+	robot.longitude = userData.vaio.longitude + (getRandom(100)-50) * 0.0001;
+	robot.latitude = userData.vaio.latitude + (getRandom(100)-50) * 0.0001;
 }
 
 function resetRobots()
@@ -76,12 +57,6 @@ function resetRobots()
 		resetRobot(robot);
 		
 	}
-}
-
-function resetRobot(robot)
-{
-	robot.longitude = userData.vaio.longitude + (getRandom(100)-50) * 0.0001;
-	robot.latitude = userData.vaio.latitude + (getRandom(100)-50) * 0.0001;
 }
 
 function robotsBeginMove()
@@ -113,12 +88,41 @@ function robotsBeginMove()
 	},1000);	
 }
 
+function DetectUsers()
+{
+	setInterval(function(){
+		try
+		{
+			var now = new Date();
+			for(var u in userData)
+			{
+				if(u == 'vaio') continue;
+				if(userData[u] == null) continue;
+				if(userData[u].name == 'robot') continue;
 
-//need express and ejs
-var express = require('express'),
-	app = express.createServer();
+				var user = userData[u];
 
-var userData = {};
+				if(user.tick.dateDiff('s',now) > 5)
+				{
+					if(user.isVaio) 
+					{
+						userData.vaio = {};
+						userData.vaio.longitude = user.longitude;
+						userData.vaio.latitude = user.latitude;
+					}
+					userData[u] = null;
+				}
+			}
+		}
+		catch(exp)
+		{
+			console.log(exp)
+		}
+
+	},5000);	
+}
+
+DetectUsers();
 
 app.use(express.logger({ format: ':method :url :status' }));
 app.use(express.bodyParser());
@@ -127,70 +131,61 @@ app.use(express.session({ secret: 'bang590' }));
 app.use(app.router);
 
 app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-
+app.use('/client',express.static(__dirname + '/client',{ cache:true}));
 app.error(function(err, req, res){
 	console.log("500:" + err + " file:" + req.url)
 	res.render('500');
 });
 
-console.log(__dirname);
-
-app.use('/client',express.static(__dirname + '/client',{ cache:true}));
-
-
 app.get('/', function(req, res){
-	res.redirect('/client/mapkiller.html');
+	console.log('superwolf');
+	res.redirect("client/mapkiller.html");
+//	res.sendfile('client/index.html');
 });
 
-app.get('/client', function(req, res){
-	res.redirect('/client/mapkiller.html');
-});
-
-app.get('/mobile',function(req,res){
-	res.redirect('/client/mapkiller_mobile.html');
-	
+app.get('/user', function(req, res){
+	var sinaoauth = new sinaOAuth();
+	sinaoauth.oAuth(req, res, function(error, access_key, access_secret) {
+		res.cookie("access_key", access_key);
+		res.cookie("access_secret", access_secret);
+		console.log('oauth success');
+		
+		res.sendfile('client/sinauser.html');
+	});
 });
 
 app.get('/big',function(req,res){
+	console.log('big');
 	res.redirect('/client/bigscreen.html');
+});
+
+app.post('/postmessage',function(req,res){
+	var message = JSON.parse(req.param('message'));
+	console.log(message);
+	addMessage(message);
+	res.send({});
 	
 });
 
+app.get('/messages',function(req,res){
+	console.log(messageArray);
+	res.send(messageArray);
+});
 
-setInterval(function(){
-	
-	try
-	{
-		var now = new Date();
-		for(var u in userData)
+app.get('/sina',function(req,res){
+	var sinaoauth = new sinaOAuth(req.cookies.access_key, req.cookies.access_secret);	
+	sinaoauth.verify({}, function(err, data) {
+		if (err) 
 		{
-			if(u == 'vaio') continue;
-			if(userData[u] == null) continue;
-			if(userData[u].name == 'robot') continue;
-		
-			var user = userData[u];
-			console.log(u);
-			console.log(user);
-		
-		
-			if(user.tick.dateDiff('s',now) > 5)
-			{
-				if(user.isVaio) 
-				{
-					userData.vaio = {};
-					userData.vaio.longitude = user.longitude;
-					userData.vaio.latitude = user.latitude;
-				}
-				userData[u] = null;
-			}
+			res.send("auth failed!");			
+			return console.log(err);
 		}
-	}
-	catch(exp)
-	{
-		console.log(exp)
-	}
+		
+		var userinfo = JSON.parse(data);
 	
-},5000);
+		res.send(data);
+	});
+});
 
 app.post('/location',function(req,res){	
 	var userinfo = JSON.parse(req.param('userinfo'));
@@ -215,21 +210,6 @@ app.post('/location',function(req,res){
 	if(userData['vaio'].id == id) result = {success:true};
 	
 	res.send(result);
-});
-
-app.post('/vaio',function(req,res){
-	res.send({});
-	if(userData.vaio) 
-	{
-		return;
-    }
-	
-	var vaio = JSON.parse(req.param('vaio'));
-	vaio.name = 'vaio';
-	
-	userData.vaio = vaio;
-	createRobots();
-	robotsBeginMove();
 });
 
 app.post('/get',function(req,res){
@@ -262,19 +242,23 @@ app.post('/get',function(req,res){
 	
 });
 
-
-
-app.post('/login',function(req,res){
-	var userinfo = JSON.parse(req.param('userinfo'));	
-	userData[userinfo.id] = userinfo;
-	userData[userinfo.id].tick = new Date();
-	userData[userinfo.id].isVaio = false;
-	res.cookie("id",userinfo.id,{maxAge:900000});
-	res.send({});
-});
-
 app.get('/enemies',function(req,res){
 	res.send(userData);
+});
+
+app.post('/vaio',function(req,res){
+	res.send({});
+	if(userData.vaio) 
+	{
+		return;
+    }
+	
+	var vaio = JSON.parse(req.param('vaio'));
+	vaio.name = 'vaio';
+	
+	userData.vaio = vaio;
+	createRobots();
+	robotsBeginMove();
 });
 
 app.post('/resetrobots',function(req,res){

@@ -1,0 +1,90 @@
+<html>
+<head>
+	<style>
+	body {
+		margin: 0px;
+		padding: 0px;
+	}
+	#talk-container{
+		position: relative;
+		height:100%;
+	}
+	#content-container {
+		color:yellow;
+		position:absolute;
+		width:100%;
+		height:100%;
+		top:-30px;	
+		padding-top:30px;
+		background-color:red;
+	}
+	#content-inner
+	{
+	}
+	#input-container {
+		position:absolute;
+		bottom:0px;
+		width:100%;
+		background-color: green;
+	}
+	#input-txt
+	{
+		height:30px;
+		width:80%;
+	}
+
+	
+	</style>
+	<script src="/client/lib/json2.js"></script>
+	<script src="/client/lib/utility.js"></script>
+	<script src="/client/lib/jquery.js"></script>
+	<script src="/client/lib/underscore.js"></script>
+	<script src="/client/lib/backbone.js"></script>
+	<script src="/client/lib/service.js"></script>
+	<script src="/client/logic/user.module.js"></script>
+	<script>
+		$(function(){
+			var service = getService();
+			
+			setInterval(function(){
+				service.messages(function(data){
+					var str = "";					
+					for(var q in data)
+					{
+						console.log(data[q].content);
+
+						str += data[q].content+ "<br />"
+					}
+					$('#content-container').html(str)
+				});
+			},1000);
+			$('#send-btn').click(function(){
+				
+				var message = {};
+				message.name = "supewrolf";
+				message.content = $('#input-txt').val();
+				$('#send-btn').hide();
+				service.postmessage(function(){
+					$('#send-btn').show();
+				},
+				{
+					"message":JSON.stringify(message)
+				})
+			});
+			
+		});
+	</script>
+
+</head>
+<body>
+	<script type="text/template" id="sinauser-template">
+	</script>
+	<div id="talk-container">
+		<div id="content-container">
+		</div>
+		<div id="input-container">
+			<input id="input-txt" type="text" value="sdfsdf"/><input type="button" id="send-btn" value="send"/>
+		</div>
+	</div>
+</body>
+</html>

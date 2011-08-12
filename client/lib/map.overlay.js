@@ -5,11 +5,13 @@ MyOverlay.prototype.onAdd = function() {
 	this._div = $div[0];
 	var panes = this.getPanes();
 	panes.mapPane.appendChild(this._div);
- 	}
+}
 MyOverlay.prototype.onRemove = function() {
-    }
-MyOverlay.prototype.draw = function() {	
-    }
+	
+}
+MyOverlay.prototype.draw = function() {
+	
+}
 function MyOverlay(map) {
     this.setMap(map);
 }

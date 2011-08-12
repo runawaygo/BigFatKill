@@ -85,7 +85,7 @@ function onSuccess(position) {
 
 function sendLocation()
 {
-	setInterval(function() {		
+	setTimeout(function() {		
 		var userinfoStr = JSON.stringify(userinfo);
         service.location(function(e) {
 				if(!e.success && isVaio)
@@ -94,12 +94,12 @@ function sendLocation()
 					$('#get-layer').hide();
 					userMarker.setIcon(youicon);					
 				}
-				isVaio = e.success;				
+				isVaio = e.success;	
+				sendLocation();
 		},
         {
 			userinfo:userinfoStr
         });
-		
 		checkGetVaio();
     },
     1000);	
@@ -252,8 +252,7 @@ function setEnemies()
 }
 
 function getEnemies()
- {
-	
+{
 	 service.enemies(function(e) {
 			enemies = e;
             setEnemies();
@@ -268,23 +267,22 @@ function getEnemies()
         });
     },
     1000);
-
 }
 
-function setDynamicEnemy(enemyinfo)
+function beginGetEnemies()
 {
-    var enemy = new Enemy(enemyinfo);
-    var enemyView = new UserView({
-        model: enemy
-    });
-    $('#container').append(enemyView.render().el);
-
-    enemy.move(getRandom(600) - 300, getRandom(600) - 300);
-    setInterval(function() {
-        enemy.moveToward(user.getPosition());
+	setTimeout(function() {
+        service.enemies(function(e) {
+			enemies = e;
+            setEnemies();
+			setVaio(enemies.vaio);
+			beginGetEnemies();
+        });
     },
-    800);
+    1000);
+    
 }
+
 
 function createCoreUser()
 {
@@ -306,14 +304,6 @@ function resetCoreUser()
 	}
 	
 	userMarker.setPosition(getUserLatLng());
-}
-
-function sendUserLocation()
-{
-	service.login(_fn,
-    {
-        userinfo: JSON.stringify(userinfo)
-    });
 }
 
 function setControl()
