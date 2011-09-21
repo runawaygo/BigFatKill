@@ -1,6 +1,7 @@
 {
   "name": "node-example",
   "version": "0.0.1",
+  "main": "./mapkiller_server.js",
   "dependencies": {
     "express": "2.2.0",
 	"websocket-server": "1.4.03",
