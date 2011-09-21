@@ -1,18 +1,16 @@
 require('./lib/utility.js');
+require('underscore');
+
 //need express and ejs
 var express = require('express'),
 	sinaOAuth = require('./lib/sinaOAuth'),
 	app = express.createServer();
+	
+var nowjs = require('now'),
+	everyone = nowjs.initialize(app);
 
 var userData = {};
 var messageArray = [];
-
-function addMessage(message)
-{
-	if(messageArray.length >20) messageArray.splice(0,1);
-	messageArray[messageArray.length] = message;
-	
-}
 
 function getRandom(max){
     var vNum;
@@ -61,7 +59,7 @@ function resetRobots()
 
 function robotsBeginMove()
 {
-	var speed = 0.00003;
+	var speed = 0.00006;
 	setInterval(function(){
 		if(userData.vaio.isHide) return;
 		
@@ -83,8 +81,10 @@ function robotsBeginMove()
 			
 			if(distance < 0.00003)
 				resetRobot(robot);
-			
+			everyone.now.playerLocationChange(robot.id,robot.latitude,robot.longitude);
 		}
+		
+		
 	},1000);	
 }
 
@@ -127,7 +127,6 @@ DetectUsers();
 app.use(express.logger({ format: ':method :url :status' }));
 app.use(express.bodyParser());
 app.use(express.cookieParser());
-app.use(express.session({ secret: 'bang590' }));
 app.use(app.router);
 
 app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
@@ -143,107 +142,13 @@ app.get('/', function(req, res){
 //	res.sendfile('client/index.html');
 });
 
-app.get('/user', function(req, res){
-	var sinaoauth = new sinaOAuth();
-	sinaoauth.oAuth(req, res, function(error, access_key, access_secret) {
-		res.cookie("access_key", access_key);
-		res.cookie("access_secret", access_secret);
-		console.log('oauth success');
-		
-		res.sendfile('client/sinauser.html');
-	});
+app.get('/now',function(req,res){
+	res.redirect('/client/test-now.html');
 });
 
 app.get('/big',function(req,res){
 	console.log('big');
 	res.redirect('/client/bigscreen.html');
-});
-
-app.post('/postmessage',function(req,res){
-	var message = JSON.parse(req.param('message'));
-	console.log(message);
-	addMessage(message);
-	res.send({});
-	
-});
-
-app.get('/messages',function(req,res){
-	console.log(messageArray);
-	res.send(messageArray);
-});
-
-app.get('/sina',function(req,res){
-	var sinaoauth = new sinaOAuth(req.cookies.access_key, req.cookies.access_secret);	
-	sinaoauth.verify({}, function(err, data) {
-		if (err) 
-		{
-			res.send("auth failed!");			
-			return console.log(err);
-		}
-		
-		var userinfo = JSON.parse(data);
-	
-		res.send(data);
-	});
-});
-
-app.post('/location',function(req,res){	
-	var userinfo = JSON.parse(req.param('userinfo'));
-
-	var result = {success:false};
-	var id = userinfo.id;
-
-	if(!userData[id] || userData[id] == null)
-	{
-		userData[id] = userinfo;
-		userData[id].isVaio = false;
-	}
-	else
-	{
-		userData[id].longitude = userinfo.longitude;
-		userData[id].latitude = userinfo.latitude;
-	}
-
-	userData[id].tick = new Date();
-	res.cookie("id",id,{maxAge:900000});
-	
-	if(userData['vaio'].id == id) result = {success:true};
-	
-	res.send(result);
-});
-
-app.post('/get',function(req,res){
-	var userinfo = JSON.parse(req.param('userinfo'));
-	var id = userinfo.id;
-	var result ;
-	userData[id].longitude = userinfo.longitude;
-	userData[id].latitude = userinfo.latitude;
-	
-	if(userData.vaio.isHide) result = {success:false};
-	else
-	{
-
-		//orignaluser lost the vaio
-		userData.vaio.isVaio = false;
-		userData.vaio.isHide = false;
-		
-		//set newuser to vaio
-		userData.vaio = userData[id];
-		userData.vaio.isHide = true;
-		userData.vaio.isVaio = true;
-
-		setTimeout(function(){
-			userData.vaio.isHide = false;
-		},12000);
-		
-		result = {success:true};
-	}
-	res.send(result);
-	
-});
-
-app.get('/enemies',function(req,res){
-	res.send(userData);
 });
 
 app.post('/vaio',function(req,res){
@@ -254,9 +159,12 @@ app.post('/vaio',function(req,res){
     }
 	
 	var vaio = JSON.parse(req.param('vaio'));
+	vaio.id = 'vaio';
 	vaio.name = 'vaio';
-	
+	vaio.isVaio = true;
+	vaio.isHide = false;
 	userData.vaio = vaio;
+	
 	createRobots();
 	robotsBeginMove();
 });
@@ -265,5 +173,93 @@ app.post('/resetrobots',function(req,res){
 	resetRobots();
 });
 
-var port = process.env.PORT || 8080;
+nowjs.on('connect',function(){
+	this.now.enemy(userData);
+});
+
+everyone.now.userinfo=function(userinfo)
+{
+	var id = this.user.clientId;
+	console.log(userinfo.id);
+	
+	userinfo.id = id;
+	userData[id] = userinfo;
+	userData[id].isVaio = false;
+	
+	everyone.now.in(userinfo);
+}
+
+everyone.now.location = function(latitude,longitude){
+
+
+	var userinfo = userData[this.user.clientId];
+	if(!userinfo) return;
+		
+	userinfo.longitude = longitude;
+	userinfo.latitude = latitude;
+
+	everyone.now.playerLocationChange(userinfo.id,latitude,longitude);
+};
+
+everyone.now.logStuff = function(msg){	
+	console.log(msg);
+	this.now.comeon('superwolf');
+}
+
+everyone.now.get = function(callback){
+	var id = this.user.clientId;
+	if(userData.vaio.isHide) 
+		callback(false);
+	else
+	{	
+		if(userData.vaio.id != 'vaio')
+		{
+			nowjs.getClient(userData.vaio.id,function(){
+				this.now.lost();
+			});
+		}
+		
+		
+		userData.vaio.isVaio = false;
+		userData.vaio.isHide = false;
+		//set newuser to vaio
+		userData.vaio = userData[id];
+		userData.vaio.isVaio = true;
+		userData.vaio.isHide = true;
+
+		setTimeout(function(){
+			userData.vaio.isHide = false;
+			everyone.now.vaioShow();
+		},5000);
+
+		callback(true);
+		everyone.now.playerGet(id);
+		
+		
+	}
+}
+
+nowjs.on('disconnect',function(){
+	var id = this.user.clientId;
+	var userinfo = userData[id];
+	
+	if(userinfo && userData[id].isVaio)
+	{
+		var vaio ={};
+		vaio.id = 'vaio';
+		vaio.name = 'vaio';
+		vaio.isVaio = true;
+		vaio.isHide = false;
+		vaio.latitude = userData[id].latitude;
+		vaio.longitude = userData[id].longitude;
+		
+		userData.vaio = vaio;
+		everyone.now.resetVaio();
+	}
+	delete userData[id];
+	everyone.now.out(id);
+});
+
+
+var port = process.env.PORT || 9000;
 app.listen(port);

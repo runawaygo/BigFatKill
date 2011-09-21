@@ -1,0 +1,25 @@
+<html>
+	<head>
+		<script type="text/javascript" src="http://127.0.0.1:9000/nowjs/now.js"></script>
+
+		<script type="text/javascript">
+			now.name = "superwolf";
+			now.comeon = function(msg)
+			{
+				alert(msg);	
+			};
+		
+			now.enemy = function(userData)
+			{
+				alert(userData.length);
+			};
+			now.ready(function(){
+			  // "Hello World!" will print on server
+			
+				now.logStuff("Hello World!");
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

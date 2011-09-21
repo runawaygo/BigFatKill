@@ -21,11 +21,10 @@ var overlay;
 var service;
 
 var userinfo,userMarker;
-var vaio,vaioMarker;
 var isVaio;
-var isFirstTime = true;
+var vaioId = 'vaio';
 
-var enemies = [];
+var enemies = {};
 var enemyMarkers = {};
 
 var _fn = function(){};
@@ -52,16 +51,11 @@ function getUserLatLng()
 	
 }
 
-function onSuccess(position) {
-    //    longitude = position.coords.longitude + (getRandom(100)-50) * 0.0001;
-    //    latitude = position.coords.latitude + (getRandom(100)-50) * 0.0001;;
-
+function initScene(position) {
+	
 	createCoreUser();
     userinfo.longitude = position.coords.longitude;
     userinfo.latitude = position.coords.latitude;
-	console.log(userinfo.longitude);
-	console.log(userinfo.latitude);
-	
 	
     createMap();
 	setControl();
@@ -69,40 +63,19 @@ function onSuccess(position) {
 	resetCoreUser();
 	
 	initVaio();
-	sendLocation();
-	getEnemies();
 	
 	console.log(userinfo.longitude);
 	
-    google.maps.event.addListener(map, 'idle',
-    function() {
-		if(isFirstTime)
-		{
-
-		}
-    });
+    google.maps.event.addListener(map, 'idle',	function() {});
 }
 
 function sendLocation()
 {
-	setTimeout(function() {		
-		var userinfoStr = JSON.stringify(userinfo);
-        service.location(function(e) {
-				if(!e.success && isVaio)
-				{
-					$('#lost-layer').show();
-					$('#get-layer').hide();
-					userMarker.setIcon(youicon);					
-				}
-				isVaio = e.success;	
-				sendLocation();
-		},
-        {
-			userinfo:userinfoStr
-        });
+	setInterval(function() {	
+		now.location(userinfo.latitude,userinfo.longitude);
 		checkGetVaio();
     },
-    1000);	
+    200);	
 }
 
 function createMap()
@@ -125,7 +98,9 @@ function createMap()
 
 function checkGetVaio()
 {
-	if (!vaio || isVaio || vaio.isHide)
+	var vaio = enemies[vaioId];
+	
+	if (isVaio || vaio.isHide)
  	{
 	    $('#get-layer').hide();
 	    return;
@@ -147,55 +122,16 @@ function checkGetVaio()
 	{
 	 	$('#get-layer').hide();	
 		changeStatus(statusBar['catch']);
-		
 	}
-}
-
-function setVaio(vaioinfo)
-{
-	if(!vaioMarker)
-	{
-		vaioMarker = new google.maps.Marker({
-		    map: map,
-			icon: vaioicon
-		});
-	}
-	vaioMarker.setVisible(false);
-	
-	
-	vaio = vaioinfo;
-	
-	if(!vaio) return;
-
-	if(vaio.id == userinfo.id)
-	{ 
-		changeStatus(statusBar.run);
-		return;
-	}
-	
-	if(vaio.isHide) 
-	{
-		changeStatus(statusBar.change);
-		return;
-	}
-
-	vaio = vaioinfo;
-	
-
-	
-	var latlng = getLatLng(vaio.latitude, vaio.longitude);
-	vaioMarker.setTitle(vaioinfo.name)
-	vaioMarker.setPosition(latlng);
-	vaioMarker.setVisible(true);
-	
-	changeStatus(statusBar['catch']);
 }
 
 function initVaio()
 {
-	var vaio = {}
-	vaio.longitude = userinfo.longitude + (getRandom(100)-50) * 0.00003;
-	vaio.latitude = userinfo.latitude + (getRandom(100)-50) * 0.00003;;
+	var vaio = {};
+	vaio.longitude = userinfo.longitude + (getRandom(100)-50) * 0.00001;
+	vaio.latitude = userinfo.latitude + (getRandom(100)-50) * 0.00001;
+	vaio.isVaio = true;
+	vaio.isHide = false;
 	service.vaio(_fn,{
 		vaio: JSON.stringify(vaio)
 	});
@@ -204,90 +140,38 @@ function initVaio()
 function setEnemy(enemyinfo)
 {
 	var id = enemyinfo.id;
+	enemies[id] = enemyinfo;
+	
 	var latlng = getLatLng(enemyinfo.latitude,enemyinfo.longitude);
-		
 		
 	if(!enemyMarkers[id])
 	{
 		var marker = new google.maps.Marker({
 	      	map: map, 
 	      	title: enemyinfo.name,
-			icon: otherusericon
 	  	});
+		var icon = enemyinfo.isVaio ? vaioicon : otherusericon;
+		marker.setIcon(icon);
+		
 		enemyMarkers[id] = marker;
-
 	}
 	
 	enemyMarkers[id].setPosition(latlng);
-	
-	enemyMarkers[id].isHandled = true;	
 }
 
 function setEnemies()
 {
-	for(var q in enemyMarkers)
-	{
-		if(enemyMarkers[q] == null) continue;
-		enemyMarkers[q].isHandled = false;
-	}
     for (var q in enemies)
     {		
         if(q == userinfo.id) continue;
-		if(q == 'vaio') continue;
-		if(enemies[q] == null) continue;
-		if(enemies[q].isVaio) continue;
 		
         setEnemy(enemies[q]);	
     }
-
-	for(var q in enemyMarkers)
-	{
-		if(enemyMarkers[q] == null) continue;
-		if(enemyMarkers[q].isHandled) continue;
-		
-		enemyMarkers[q].setMap(null);
-		enemyMarkers[q] = null;
-	}
-
 }
-
-function getEnemies()
-{
-	 service.enemies(function(e) {
-			enemies = e;
-            setEnemies();
-			setVaio(enemies.vaio);
-     });
-
-    setInterval(function() {
-        service.enemies(function(e) {
-			enemies = e;
-            setEnemies();
-			setVaio(enemies.vaio);
-        });
-    },
-    1000);
-}
-
-function beginGetEnemies()
-{
-	setTimeout(function() {
-        service.enemies(function(e) {
-			enemies = e;
-            setEnemies();
-			setVaio(enemies.vaio);
-			beginGetEnemies();
-        });
-    },
-    1000);
-    
-}
-
 
 function createCoreUser()
 {
 	userinfo = {
-        id: getRandom(10000),
         name: names[getRandom(names.length)],
     }
 }
@@ -322,28 +206,23 @@ function setControl()
 			
 			i++;
 			if(i>8) clearTimeout(tick);
-			
 		},400);
 	});
 	
-	
 	$('#get-btn').click(function(){
-		service.get(function(e){
-			if(e.success)
+		now.get(function(success)
+		{
+			if(success)
 			{
 				$('#got-layer').show();
 				$('#get-layer').hide();
 				userMarker.setIcon(youvaioicon);
 				for(var q in enemyMarkers)
 				{
-					if(enemyMarkers[q] == null) continue;
-					
 					enemyMarkers[q].setIcon(enemyicon);
 				}
 			}
-			isVaio = e.success;
-		},{
-			userinfo:JSON.stringify(userinfo)
+			isVaio = success;
 		});
 	});
 }
@@ -401,51 +280,95 @@ function changeStatus(statusInfo)
 }
 
 function onError(error) {
-    alert('code: ' + error.code + '\n' +
-    'message: ' + error.message + '\n');
+    alert('code: ' + error.code + '\n' + 'message: ' + error.message + '\n');
 }
 
-function onBodyLoad() {
-    // do your thing!
-    try
-    {
-        service = getService();
-		$('#control').hide();
-		$('#start-layer').show();
-		
-		$('#bottom-banner').click(function(){
-			$('#control').toggle(200);
-		});
-		
-		$('#start-get-btn').click(function(){
-			$('#start-layer').hide();
-		})
-		
-		
-		$('#top-banner').click(function(){
-			if(isVaio) 
-			{
-				$('#win-layer').show();
-			}
-		});
-		
-		
-		$('#win-layer').click(function(){
-			$('#win-layer').hide();
-		});
+function initServiceCallback()
+{
+	now.enemy = function(e) {
+		enemies = e;
+     	setEnemies();
+    };
 
+	now.in = function(playerInfo)
+	{
+		setEnemy(playerInfo);
+	}
+	
+	now.playerLocationChange = function (playerId, latitude, longitude)
+	{
+		if(playerId != userinfo.id)
+		{
+			var player = enemies[playerId];
+			player.latitude = latitude;
+			player.longitude = longitude;
+			
+			setEnemy(player);
+			
+		}
+	};
+	
+	now.lost= function()
+	{
+		$('#lost-layer').show();
+		$('#get-layer').hide();
+		userMarker.setIcon(youicon);					
+	}
+	
+	now.playerGet = function(playerId)
+	{
+		if(vaioId == 'vaio')
+		{
+			enemyMarkers['vaio'].setVisible(false);
+		}		
 		
-		var position = {};
-		position.coords={};
-		position.coords.longitude =  121.5168662;
-		position.coords.latitude = 31.2380048;
-		
-		onSuccess(position);
-		
-        //navigator.geolocation.getCurrentPosition(onSuccess, onError);
-    }
-    catch(exp)
-    {
-        alert(exp);
-    }
+		if(playerId != userinfo.id)
+		{
+			isVaio = false;
+			vaioId = playerId;
+
+			enemies[vaioId].isHide = true;
+			userMarker.setIcon(youicon);
+			enemyMarkers[playerId].setIcon(vaioicon);
+			enemyMarkers[playerId].setVisible(false);
+		}
+	}
+	
+	now.vaioShow = function()
+	{
+		enemies[vaioId].isHide = false;
+		enemyMarkers[vaioId].setVisible(true);
+	}
+	
+	now.resetViao = function(vaio)
+	{
+		enemies.vaio = vaio;
+		setEnemy(vaio);
+	}
+	
+	now.out = function(playerId)
+	{
+		enemyMarkers[playerId].setVisible(false);
+		delete enemies[playerId];
+		delete enemyMarkers[playerId];
+	};
+	
+	now.ready(function(){
+		userinfo.id = now.core.clientId;
+		now.userinfo(userinfo);
+		sendLocation();
+	});
+}
+
+function initGame()
+{
+	service = getService();
+	//navigator.geolocation.getCurrentPosition(onSuccess, onError);
+	var position = {};
+	position.coords={};
+	position.coords.longitude =  121.5168662;
+	position.coords.latitude = 31.2380048;
+	
+	initScene(position);
+	initServiceCallback();
 }

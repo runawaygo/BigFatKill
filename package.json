@@ -5,6 +5,7 @@
     "express": "2.2.0",
 	"websocket-server": "1.4.03",
     "underscore": "",
-	"oauth": ""
+	"oauth": "",
+	"now":""
   }
 }
