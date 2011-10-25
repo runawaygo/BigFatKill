@@ -137,19 +137,17 @@ app.error(function(err, req, res){
 });
 
 app.get('/', function(req, res){
-	console.log('superwolf');
 	res.redirect("client/mapkiller.html");
-//	res.sendfile('client/index.html');
 });
 
-app.get('/now',function(req,res){
-	res.redirect('/client/test-now.html');
-});
+// app.get('/now',function(req,res){
+// 	res.redirect('/client/test-now.html');
+// });
 
-app.get('/big',function(req,res){
-	console.log('big');
-	res.redirect('/client/bigscreen.html');
-});
+// app.get('/big',function(req,res){
+// 	console.log('big');
+// 	res.redirect('/client/bigscreen.html');
+// });
 
 app.post('/vaio',function(req,res){
 	res.send({});
@@ -190,8 +188,6 @@ everyone.now.userinfo=function(userinfo)
 }
 
 everyone.now.location = function(latitude,longitude){
-
-
 	var userinfo = userData[this.user.clientId];
 	if(!userinfo) return;
 		

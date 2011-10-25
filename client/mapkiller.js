@@ -51,21 +51,12 @@ function getUserLatLng()
 	
 }
 
-function initScene(position) {
-	
-	createCoreUser();
-    userinfo.longitude = position.coords.longitude;
-    userinfo.latitude = position.coords.latitude;
-	
+
+function initScene() {	
     createMap();
 	setControl();
 	setControlBar();
-	resetCoreUser();
-	
 	initVaio();
-	
-	console.log(userinfo.longitude);
-	
     google.maps.event.addListener(map, 'idle',	function() {});
 }
 
@@ -143,7 +134,7 @@ function setEnemy(enemyinfo)
 	enemies[id] = enemyinfo;
 	
 	var latlng = getLatLng(enemyinfo.latitude,enemyinfo.longitude);
-		
+
 	if(!enemyMarkers[id])
 	{
 		var marker = new google.maps.Marker({
@@ -152,7 +143,6 @@ function setEnemy(enemyinfo)
 	  	});
 		var icon = enemyinfo.isVaio ? vaioicon : otherusericon;
 		marker.setIcon(icon);
-		
 		enemyMarkers[id] = marker;
 	}
 	
@@ -162,17 +152,21 @@ function setEnemy(enemyinfo)
 function setEnemies()
 {
     for (var q in enemies)
-    {		
+    {
+		console.log(q);
+		console.log(userinfo.id);
+		console.log(q == userinfo.id);
         if(q == userinfo.id) continue;
-		
         setEnemy(enemies[q]);	
     }
 }
 
-function createCoreUser()
+function initCoreUser(position)
 {
 	userinfo = {
         name: names[getRandom(names.length)],
+		longitude:position.coords.longitude,
+		latitude: position.coords.latitude
     }
 }
 
@@ -292,20 +286,19 @@ function initServiceCallback()
 
 	now.in = function(playerInfo)
 	{
+		if(playerInfo.id == userinfo.id) return;
+		
 		setEnemy(playerInfo);
 	}
 	
 	now.playerLocationChange = function (playerId, latitude, longitude)
 	{
-		if(playerId != userinfo.id)
-		{
-			var player = enemies[playerId];
-			player.latitude = latitude;
-			player.longitude = longitude;
-			
-			setEnemy(player);
-			
-		}
+		if(playerId == userinfo.id) return;
+		
+		var player = enemies[playerId];
+		player.latitude = latitude;
+		player.longitude = longitude;
+		setEnemy(player);
 	};
 	
 	now.lost= function()
@@ -322,11 +315,11 @@ function initServiceCallback()
 			enemyMarkers['vaio'].setVisible(false);
 		}		
 		
+		vaioId = playerId;
+		
 		if(playerId != userinfo.id)
 		{
 			isVaio = false;
-			vaioId = playerId;
-
 			enemies[vaioId].isHide = true;
 			userMarker.setIcon(youicon);
 			enemyMarkers[playerId].setIcon(vaioicon);
@@ -336,6 +329,8 @@ function initServiceCallback()
 	
 	now.vaioShow = function()
 	{
+		if(isVaio) return;
+		
 		enemies[vaioId].isHide = false;
 		enemyMarkers[vaioId].setVisible(true);
 	}
@@ -368,7 +363,10 @@ function initGame()
 	position.coords={};
 	position.coords.longitude =  121.5168662;
 	position.coords.latitude = 31.2380048;
+
+	initCoreUser(position);
+	initScene();
+	resetCoreUser();
 	
-	initScene(position);
 	initServiceCallback();
 }
